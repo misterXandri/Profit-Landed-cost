@@ -1,47 +1,314 @@
-Landed cost per unit
-Import into Indonesia, in IDR
-Landed cost per unit (excl. creditable PPN & PPh 22)
-Rp 0
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Landed Cost">
+<title>Landed Cost</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EDF1F3; --surface:#FFFFFF; --ink:#14283C; --muted:#5F7180; --rule:#CBD5DC;
+  --accent:#0F7C7A; --c1:#14283C; --c2:#3F6E8C; --c3:#8FB3C7; --c4:#0F7C7A; --c5:#C98A2E;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1A24; --surface:#162430; --ink:#E6EEF2; --muted:#93A6B4; --rule:#2B3D4B;
+    --accent:#4FC1BC; --c1:#E6EEF2; --c2:#7FA9C4; --c3:#3F6E8C; --c4:#4FC1BC; --c5:#E0A85A;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1A24; --surface:#162430; --ink:#E6EEF2; --muted:#93A6B4; --rule:#2B3D4B;
+  --accent:#4FC1BC; --c1:#E6EEF2; --c2:#7FA9C4; --c3:#3F6E8C; --c4:#4FC1BC; --c5:#E0A85A;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"IBM Plex Sans",-apple-system,"Helvetica Neue",Arial,sans-serif;font-size:16px;line-height:1.45;
+  font-variant-numeric:tabular-nums}
+main{max-width:560px;margin:0 auto;padding:20px 16px 48px}
+h1{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",sans-serif;font-weight:600;font-size:1.6rem;margin:4px 0 2px;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:.9rem;margin:0 0 18px}
 
-Exchange rates to IDR
-1 CNY
-1 USD
-1 JPY
-Use all ECB rates
-↻ Refresh
-Fetching latest rates…
-Customs values imports at the Ministry of Finance weekly rate (kurs pajak/KMK). Enter that rate if you want duty and tax figures to match the PIB.
-Product price
-Price basis
-FOB
-CIF
-Unit price
-Currency
-CNYUSDJPYIDR
-Units in shipment
-Quantity is used only to spread freight and local charges across each unit.
-Freight & insurance (whole shipment)
-Ocean freight
-Currency
-USDCNYJPYIDR
-Insurance entered as
-% of FOB + freight
-Amount
-Insurance %
-Import duty & taxes
-Bea Masuk %
-PPN import % (effective)
-PPh 22 import %
-Bea Masuk = rate × CIF. PPN and PPh 22 = rate × (CIF + Bea Masuk). Defaults are editable starting points; check each rate against your HS code, API status and current PMK.
-Local charges (whole shipment, IDR)
-THC
-Trucking
-PPJK / customs broker
-Other
-Profit & selling price (per unit)
-Markup % on landed cost
+.result{background:var(--surface);border-left:4px solid var(--accent);padding:16px 16px 14px;margin-bottom:20px}
+.result .label{color:var(--muted);font-size:.85rem}
+.big{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",sans-serif;font-weight:600;font-size:2.4rem;line-height:1.1;margin:2px 0 12px;word-break:break-word}
+.stack{display:flex;height:14px;width:100%;overflow:hidden;margin-bottom:12px;background:var(--rule)}
+.stack span{height:100%;transition:width .25s}
+@media (prefers-reduced-motion:reduce){.stack span{transition:none}}
+.rows{width:100%;border-collapse:collapse;font-size:.92rem}
+.rows td{padding:5px 0;border-top:1px solid var(--rule)}
+.rows td:last-child{text-align:right}
+.sw{display:inline-block;width:10px;height:10px;margin-right:8px;vertical-align:baseline}
+.rows tr.total td{font-weight:600}
+.rows tr.cash td{color:var(--muted)}
 
-Profit = markup % × landed cost. PPN uses the PPN % from Import duty & taxes.
-Clear all fields
-Landed cost treats PPN and PPh 22 as recoverable (input tax credit and income tax prepayment). The last line shows cash paid per unit including them.
-Rounding follows your inputs; customs rounds some amounts on the PIB, so small differences are expected.
+fieldset{border:0;margin:0 0 14px;padding:14px 16px;background:var(--surface)}
+legend{float:left;width:100%;padding:0;margin-bottom:10px;font-weight:600;font-size:1rem}
+legend+*{clear:both}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}
+.full{grid-column:1/-1}
+label{display:block;font-size:.82rem;color:var(--muted);margin-bottom:3px}
+input,select{width:100%;font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--rule);
+  padding:9px 10px;border-radius:6px;-webkit-appearance:none;appearance:none}
+select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+  background-position:calc(100% - 16px) 55%,calc(100% - 11px) 55%;background-size:5px 5px;background-repeat:no-repeat;padding-right:28px}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:flex;border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.seg button{flex:1;font:inherit;font-size:.9rem;padding:8px 6px;border:0;background:var(--bg);color:var(--ink);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--surface);font-weight:600}
+.hint{font-size:.8rem;color:var(--muted);margin:8px 0 0}
+.hidden{display:none}
+.reset{font:inherit;font-size:.9rem;background:none;border:1px solid var(--rule);color:var(--muted);padding:8px 14px;border-radius:6px;cursor:pointer}
+.live{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:4px;font-size:.8rem;color:var(--muted)}
+.live button,.fxbar button{font:inherit;font-size:.8rem;font-weight:600;color:var(--accent);background:none;border:1px solid var(--rule);border-radius:6px;padding:3px 10px;cursor:pointer}
+.fxbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:12px}
+.fxbar button:disabled{opacity:.4;cursor:default}
+.live.hidden{display:none}
+.notes{font-size:.8rem;color:var(--muted);margin-top:18px}
+.notes p{margin:0 0 6px}
+</style>
+</head>
+<body>
+<main>
+  <h1>Landed cost per unit</h1>
+  <p class="sub">Import into Indonesia, in IDR</p>
+
+  <section class="result" aria-live="polite">
+    <div class="label">Landed cost per unit (excl. creditable PPN &amp; PPh 22)</div>
+    <div class="big" id="total">Rp 0</div>
+    <div class="stack" id="stack" aria-hidden="true"></div>
+    <table class="rows" id="rows"></table>
+  </section>
+
+  <fieldset>
+    <legend>Exchange rates to IDR</legend>
+    <div class="grid">
+      <div><label for="rCNY">1 CNY</label><input id="rCNY" inputmode="decimal" placeholder="e.g. 2300"><div class="live hidden" id="liveCNY"><span></span><button type="button" data-cur="CNY">Use</button></div></div>
+      <div><label for="rUSD">1 USD</label><input id="rUSD" inputmode="decimal" placeholder="e.g. 16500"><div class="live hidden" id="liveUSD"><span></span><button type="button" data-cur="USD">Use</button></div></div>
+      <div><label for="rJPY">1 JPY</label><input id="rJPY" inputmode="decimal" placeholder="e.g. 108"><div class="live hidden" id="liveJPY"><span></span><button type="button" data-cur="JPY">Use</button></div></div>
+    </div>
+    <div class="fxbar">
+      <button type="button" id="useAll" disabled>Use all ECB rates</button>
+      <button type="button" id="refresh" aria-label="Refresh rates">↻ Refresh</button>
+    </div>
+    <p class="hint" id="fxStatus">Fetching latest rates…</p>
+    <p class="hint">Customs values imports at the Ministry of Finance weekly rate (kurs pajak/KMK). Enter that rate if you want duty and tax figures to match the PIB.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Product price</legend>
+    <div class="grid">
+      <div class="full">
+        <label>Price basis</label>
+        <div class="seg" id="basis">
+          <button type="button" data-v="FOB" aria-pressed="true">FOB</button>
+          <button type="button" data-v="CIF" aria-pressed="false">CIF</button>
+        </div>
+      </div>
+      <div><label for="price">Unit price</label><input id="price" inputmode="decimal" placeholder="0.00"></div>
+      <div><label for="priceCur">Currency</label>
+        <select id="priceCur"><option>CNY</option><option>USD</option><option>JPY</option><option>IDR</option></select></div>
+      <div class="full"><label for="qty">Units in shipment</label><input id="qty" inputmode="numeric" placeholder="e.g. 2400"></div>
+    </div>
+    <p class="hint">Quantity is used only to spread freight and local charges across each unit.</p>
+  </fieldset>
+
+  <fieldset id="fiSet">
+    <legend>Freight &amp; insurance (whole shipment)</legend>
+    <div class="grid">
+      <div><label for="freight">Ocean freight</label><input id="freight" inputmode="decimal" placeholder="0"></div>
+      <div><label for="freightCur">Currency</label>
+        <select id="freightCur"><option>USD</option><option>CNY</option><option>JPY</option><option>IDR</option></select></div>
+      <div class="full">
+        <label>Insurance entered as</label>
+        <div class="seg" id="insMode">
+          <button type="button" data-v="pct" aria-pressed="true">% of FOB + freight</button>
+          <button type="button" data-v="amt" aria-pressed="false">Amount</button>
+        </div>
+      </div>
+      <div id="insPctWrap"><label for="insPct">Insurance %</label><input id="insPct" inputmode="decimal" placeholder="0"></div>
+      <div id="insAmtWrap" class="hidden"><label for="insAmt">Insurance (freight currency)</label><input id="insAmt" inputmode="decimal" placeholder="0"></div>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Import duty &amp; taxes</legend>
+    <div class="grid">
+      <div><label for="bm">Bea Masuk %</label><input id="bm" inputmode="decimal" placeholder="per HS code"></div>
+      <div><label for="ppn">PPN import % (effective)</label><input id="ppn" inputmode="decimal"></div>
+      <div><label for="pph">PPh 22 import %</label><input id="pph" inputmode="decimal"></div>
+    </div>
+    <p class="hint">Bea Masuk = rate × CIF. PPN and PPh 22 = rate × (CIF + Bea Masuk). Defaults are editable starting points; check each rate against your HS code, API status and current PMK.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Local charges (whole shipment, IDR)</legend>
+    <div class="grid">
+      <div><label for="thc">THC</label><input id="thc" inputmode="numeric" placeholder="0"></div>
+      <div><label for="truck">Trucking</label><input id="truck" inputmode="numeric" placeholder="0"></div>
+      <div><label for="ppjk">PPJK / customs broker</label><input id="ppjk" inputmode="numeric" placeholder="0"></div>
+      <div><label for="other">Other</label><input id="other" inputmode="numeric" placeholder="0"></div>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Profit &amp; selling price (per unit)</legend>
+    <div class="grid">
+      <div><label for="markup">Markup % on landed cost</label><input id="markup" inputmode="decimal" placeholder="e.g. 25"></div>
+    </div>
+    <table class="rows" id="sellRows" style="margin-top:12px"></table>
+    <p class="hint">Profit = markup % × landed cost. PPN uses the PPN % from Import duty &amp; taxes.</p>
+  </fieldset>
+
+  <button type="button" class="reset" id="reset">Clear all fields</button>
+
+  <div class="notes">
+    <p>Landed cost treats PPN and PPh 22 as recoverable (input tax credit and income tax prepayment). The last line shows cash paid per unit including them.</p>
+    <p>Rounding follows your inputs; customs rounds some amounts on the PIB, so small differences are expected.</p>
+  </div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const NUM = ["rUSD","rCNY","rJPY","price","qty","freight","insPct","insAmt","bm","ppn","pph","thc","truck","ppjk","other","markup"];
+const SEL = ["priceCur","freightCur"];
+const DEFAULTS = {ppn:"11", pph:"2.5", priceCur:"CNY", freightCur:"USD", basis:"FOB", insMode:"pct"};
+const KEY = "landed-cost-v1";
+let state = {basis:"FOB", insMode:"pct"};
+
+function n(id){ const v = parseFloat(String($(id).value).replace(/,/g,"")); return isFinite(v) ? v : 0; }
+function rate(cur){ return cur==="IDR" ? 1 : n("r"+cur); }
+const fmt = v => "Rp " + Math.round(v).toLocaleString("id-ID");
+
+function setSeg(id, v){
+  state[id] = v;
+  $(id).querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v===v ? "true":"false"));
+}
+
+function calc(){
+  const qty = Math.max(n("qty"), 0);
+  const pr = rate($("priceCur").value), fr = rate($("freightCur").value);
+  const isCIF = state.basis==="CIF";
+  $("fiSet").classList.toggle("hidden", isCIF);
+  $("insPctWrap").classList.toggle("hidden", state.insMode!=="pct");
+  $("insAmtWrap").classList.toggle("hidden", state.insMode!=="amt");
+
+  const price = n("price") * pr;
+  let freight = 0, ins = 0;
+  if(!isCIF && qty>0){
+    freight = n("freight") * fr / qty;
+    ins = state.insMode==="pct" ? (price + freight) * n("insPct")/100 : n("insAmt") * fr / qty;
+  }
+  const cif = price + freight + ins;
+  const bm = cif * n("bm")/100;
+  const nilaiImpor = cif + bm;
+  const ppn = nilaiImpor * n("ppn")/100;
+  const pph = nilaiImpor * n("pph")/100;
+  const local = qty>0 ? (n("thc")+n("truck")+n("ppjk")+n("other"))/qty : 0;
+  const landed = cif + bm + local;
+  const cash = landed + ppn + pph;
+
+  const parts = isCIF
+    ? [["Product (CIF)", price, "--c1"]]
+    : [["Product (FOB)", price, "--c1"],["Freight", freight, "--c2"],["Insurance", ins, "--c3"]];
+  parts.push(["Bea Masuk", bm, "--c4"],["Local charges", local, "--c5"]);
+
+  $("total").textContent = fmt(landed);
+  $("stack").innerHTML = landed>0 ? parts.map(p=>`<span style="width:${p[1]/landed*100}%;background:var(${p[2]})"></span>`).join("") : "";
+  let rows = parts.map(p=>`<tr><td><span class="sw" style="background:var(${p[2]})"></span>${p[0]}</td><td>${fmt(p[1])}</td></tr>`).join("");
+  rows += `<tr class="total"><td>Landed cost</td><td>${fmt(landed)}</td></tr>`;
+  rows += `<tr class="cash"><td>PPN import</td><td>${fmt(ppn)}</td></tr>`;
+  rows += `<tr class="cash"><td>PPh 22 import</td><td>${fmt(pph)}</td></tr>`;
+  rows += `<tr class="total"><td>Cash paid incl. taxes</td><td>${fmt(cash)}</td></tr>`;
+  if(qty<=0 && !isCIF) rows += `<tr class="cash"><td colspan="2">Enter units in shipment to include freight and local charges.</td></tr>`;
+  $("rows").innerHTML = rows;
+
+  const ppnS = n("ppn")/100;
+  const profit = landed * n("markup")/100;
+  const sellEx = landed + profit;
+  const sellPpn = sellEx * ppnS;
+  let sr = "";
+  sr += `<tr><td>Landed cost</td><td>${fmt(landed)}</td></tr>`;
+  sr += `<tr class="cash"><td>PPN import (from duty &amp; taxes)</td><td>${fmt(ppn)}</td></tr>`;
+  sr += `<tr class="total"><td>Landed cost incl. PPN import</td><td>${fmt(landed + ppn)}</td></tr>`;
+  sr += `<tr><td>Profit (${n("markup")}% markup)</td><td>${fmt(profit)}</td></tr>`;
+  sr += `<tr><td>Selling price excl. PPN</td><td>${fmt(sellEx)}</td></tr>`;
+  sr += `<tr class="cash"><td>PPN on selling price</td><td>${fmt(sellPpn)}</td></tr>`;
+  sr += `<tr class="total"><td>Selling price incl. PPN</td><td>${fmt(sellEx + sellPpn)}</td></tr>`;
+  $("sellRows").innerHTML = sr;
+  save();
+}
+
+function save(){
+  try{
+    const d = {basis:state.basis, insMode:state.insMode};
+    NUM.concat(SEL).forEach(id => d[id] = $(id).value);
+    localStorage.setItem(KEY, JSON.stringify(d));
+  }catch(e){}
+}
+function load(){
+  let d = {};
+  try{ d = JSON.parse(localStorage.getItem(KEY)) || {}; }catch(e){}
+  d = Object.assign({}, DEFAULTS, d);
+  NUM.concat(SEL).forEach(id => { if(d[id]!==undefined) $(id).value = d[id]; });
+  setSeg("basis", d.basis); setSeg("insMode", d.insMode);
+}
+
+["basis","insMode"].forEach(id => $(id).addEventListener("click", e => {
+  const b = e.target.closest("button"); if(!b) return; setSeg(id, b.dataset.v); calc();
+}));
+NUM.concat(SEL).forEach(id => $(id).addEventListener("input", calc));
+$("reset").addEventListener("click", () => {
+  try{ localStorage.removeItem(KEY); }catch(e){}
+  NUM.forEach(id => $(id).value = "");
+  load(); calc();
+});
+// ---- Live FX: ECB reference rates via Frankfurter, fetched on open ----
+const FX_URL = "https://api.frankfurter.dev/v1/latest?base=IDR&symbols=USD,CNY,JPY";
+let live = {};
+const r2 = v => Math.round(v*100)/100;
+const fmtRate = v => v.toLocaleString("id-ID",{minimumFractionDigits:2,maximumFractionDigits:2});
+
+function useRate(cur){ if(live[cur]){ $("r"+cur).value = r2(live[cur]); calc(); } }
+
+async function fetchFX(){
+  $("fxStatus").textContent = "Fetching latest rates…";
+  $("refresh").disabled = true;
+  try{
+    const res = await fetch(FX_URL, {cache:"no-store"});
+    if(!res.ok) throw new Error("HTTP " + res.status);
+    const d = await res.json();
+    live = {};
+    ["CNY","USD","JPY"].forEach(c => { const v = d.rates && d.rates[c]; if(v>0) live[c] = 1/v; });
+    ["CNY","USD","JPY"].forEach(c => {
+      const el = $("live"+c);
+      if(live[c]){ el.querySelector("span").textContent = "ECB: " + fmtRate(live[c]); el.classList.remove("hidden"); }
+      else el.classList.add("hidden");
+    });
+    $("useAll").disabled = Object.keys(live).length===0;
+    $("fxStatus").textContent = "ECB reference rates dated " + d.date + ". Market rate, not kurs pajak (KMK).";
+  }catch(e){
+    $("fxStatus").textContent = "Couldn't fetch rates (" + (e && e.message ? e.message : "network error") + "). Using your saved rates.";
+  }finally{
+    $("refresh").disabled = false;
+  }
+}
+
+document.querySelectorAll(".live button").forEach(b => b.addEventListener("click", () => useRate(b.dataset.cur)));
+$("useAll").addEventListener("click", () => { ["CNY","USD","JPY"].forEach(c => { if(live[c]) $("r"+c).value = r2(live[c]); }); calc(); });
+$("refresh").addEventListener("click", fetchFX);
+document.addEventListener("visibilitychange", () => { if(document.visibilityState==="visible") fetchFX(); });
+
+load(); calc(); fetchFX();
+</script>
+</body>
+</html>
