@@ -40,6 +40,11 @@ h1{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",sans-serif;font-weight:
 
 .result{background:var(--surface);border-left:4px solid var(--accent);padding:16px 16px 14px;margin-bottom:20px}
 .result .label{color:var(--muted);font-size:.85rem}
+.sell{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:-4px 0 14px;padding-top:10px;border-top:1px solid var(--rule)}
+.sell .label{color:var(--muted);font-size:.85rem}
+.sell .val{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",sans-serif;font-weight:600;font-size:1.6rem;line-height:1.15}
+.sell .seg{flex:0 0 auto}
+.sell .seg button{padding:6px 12px;font-size:.85rem}
 .big{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",sans-serif;font-weight:600;font-size:2.4rem;line-height:1.1;margin:2px 0 12px;word-break:break-word}
 .stack{display:flex;height:14px;width:100%;overflow:hidden;margin-bottom:12px;background:var(--rule)}
 .stack span{height:100%;transition:width .25s}
@@ -85,6 +90,16 @@ input:focus,select:focus,button:focus-visible{outline:2px solid var(--accent);ou
   <section class="result" aria-live="polite">
     <div class="label">Landed cost per unit (excl. creditable PPN &amp; PPh 22)</div>
     <div class="big" id="total">Rp 0</div>
+    <div class="sell">
+      <div>
+        <div class="label" id="sellLabel">Selling price per unit (incl. PPN)</div>
+        <div class="val" id="sellTop">Rp 0</div>
+      </div>
+      <div class="seg" id="sellMode" role="group" aria-label="Show selling price with or without PPN">
+        <button type="button" data-v="incl" aria-pressed="true">Incl. PPN</button>
+        <button type="button" data-v="excl" aria-pressed="false">Excl. PPN</button>
+      </div>
+    </div>
     <div class="stack" id="stack" aria-hidden="true"></div>
     <table class="rows" id="rows"></table>
   </section>
@@ -181,7 +196,7 @@ input:focus,select:focus,button:focus-visible{outline:2px solid var(--accent);ou
 const $ = id => document.getElementById(id);
 const NUM = ["rUSD","rCNY","rJPY","price","qty","freight","insPct","insAmt","bm","ppn","pph","thc","truck","ppjk","other","markup"];
 const SEL = ["priceCur","freightCur"];
-const DEFAULTS = {ppn:"11", pph:"2.5", priceCur:"CNY", freightCur:"USD", basis:"FOB", insMode:"pct"};
+const DEFAULTS = {ppn:"11", pph:"2.5", priceCur:"CNY", freightCur:"USD", basis:"FOB", insMode:"pct", sellMode:"incl"};
 const KEY = "landed-cost-v1";
 let state = {basis:"FOB", insMode:"pct"};
 
@@ -245,12 +260,15 @@ function calc(){
   sr += `<tr class="cash"><td>PPN on selling price</td><td>${fmt(sellPpn)}</td></tr>`;
   sr += `<tr class="total"><td>Selling price incl. PPN</td><td>${fmt(sellEx + sellPpn)}</td></tr>`;
   $("sellRows").innerHTML = sr;
+  const incl = state.sellMode !== "excl";
+  $("sellTop").textContent = fmt(incl ? sellEx + sellPpn : sellEx);
+  $("sellLabel").textContent = "Selling price per unit (" + (incl ? "incl." : "excl.") + " PPN, " + n("markup") + "% markup)";
   save();
 }
 
 function save(){
   try{
-    const d = {basis:state.basis, insMode:state.insMode};
+    const d = {basis:state.basis, insMode:state.insMode, sellMode:state.sellMode};
     NUM.concat(SEL).forEach(id => d[id] = $(id).value);
     localStorage.setItem(KEY, JSON.stringify(d));
   }catch(e){}
@@ -260,10 +278,10 @@ function load(){
   try{ d = JSON.parse(localStorage.getItem(KEY)) || {}; }catch(e){}
   d = Object.assign({}, DEFAULTS, d);
   NUM.concat(SEL).forEach(id => { if(d[id]!==undefined) $(id).value = d[id]; });
-  setSeg("basis", d.basis); setSeg("insMode", d.insMode);
+  setSeg("basis", d.basis); setSeg("insMode", d.insMode); setSeg("sellMode", d.sellMode);
 }
 
-["basis","insMode"].forEach(id => $(id).addEventListener("click", e => {
+["basis","insMode","sellMode"].forEach(id => $(id).addEventListener("click", e => {
   const b = e.target.closest("button"); if(!b) return; setSeg(id, b.dataset.v); calc();
 }));
 NUM.concat(SEL).forEach(id => $(id).addEventListener("input", calc));
