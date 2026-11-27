@@ -45,6 +45,13 @@ h1{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",sans-serif;font-weight:
 .sell .val{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",sans-serif;font-weight:600;font-size:1.6rem;line-height:1.15}
 .sell .seg{flex:0 0 auto}
 .sell .seg button{padding:6px 12px;font-size:.85rem}
+.warn{border-left:3px solid var(--c5);background:var(--bg);padding:8px 10px;margin:0 0 12px;font-size:.9rem}
+.warn:empty{display:none}
+.warn div+div{margin-top:4px}
+input.missing{border-color:var(--c5);box-shadow:0 0 0 1px var(--c5)}
+.suffix{position:relative}
+.suffix input{padding-right:54px}
+.suffix span{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.85rem;font-weight:600;letter-spacing:.03em;pointer-events:none;background:var(--rule);padding:2px 6px;border-radius:4px}
 .big{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",sans-serif;font-weight:600;font-size:2.4rem;line-height:1.1;margin:2px 0 12px;word-break:break-word}
 .stack{display:flex;height:14px;width:100%;overflow:hidden;margin-bottom:12px;background:var(--rule)}
 .stack span{height:100%;transition:width .25s}
@@ -90,6 +97,7 @@ input:focus,select:focus,button:focus-visible{outline:2px solid var(--accent);ou
   <section class="result" aria-live="polite">
     <div class="label">Landed cost per unit (excl. creditable PPN &amp; PPh 22)</div>
     <div class="big" id="total">Rp 0</div>
+    <div class="warn" id="warn" role="alert"></div>
     <div class="sell">
       <div>
         <div class="label" id="sellLabel">Selling price per unit (incl. PPN)</div>
@@ -166,12 +174,12 @@ input:focus,select:focus,button:focus-visible{outline:2px solid var(--accent);ou
   </fieldset>
 
   <fieldset>
-    <legend>Local charges (whole shipment, IDR)</legend>
+    <legend>Local charges (whole shipment)</legend>
     <div class="grid">
-      <div><label for="thc">THC</label><input id="thc" inputmode="numeric" placeholder="0"></div>
-      <div><label for="truck">Trucking</label><input id="truck" inputmode="numeric" placeholder="0"></div>
-      <div><label for="ppjk">PPJK / customs broker</label><input id="ppjk" inputmode="numeric" placeholder="0"></div>
-      <div><label for="other">Other</label><input id="other" inputmode="numeric" placeholder="0"></div>
+      <div><label for="thc">THC (USD)</label><div class="suffix"><input id="thc" inputmode="decimal" placeholder="0"><span aria-hidden="true">USD</span></div></div>
+      <div><label for="truck">Trucking (IDR)</label><input id="truck" inputmode="numeric" placeholder="0"></div>
+      <div><label for="ppjk">PPJK / customs broker (IDR)</label><input id="ppjk" inputmode="numeric" placeholder="0"></div>
+      <div><label for="other">Other (IDR)</label><input id="other" inputmode="numeric" placeholder="0"></div>
     </div>
   </fieldset>
 
@@ -224,11 +232,30 @@ function calc(){
     ins = state.insMode==="pct" ? (price + freight) * n("insPct")/100 : n("insAmt") * fr / qty;
   }
   const cif = price + freight + ins;
+
+  // Warn when a currency in use has no exchange rate
+  const need = {};
+  if(n("price")>0 && $("priceCur").value!=="IDR") (need[$("priceCur").value] = need[$("priceCur").value]||[]).push("Product price");
+  if(!isCIF){
+    const fc = $("freightCur").value;
+    if(fc!=="IDR"){
+      if(n("freight")>0) (need[fc]=need[fc]||[]).push("Freight");
+      if(state.insMode==="amt" && n("insAmt")>0) (need[fc]=need[fc]||[]).push("Insurance");
+    }
+  }
+  if(n("thc")>0) (need.USD=need.USD||[]).push("THC");
+  const msgs = [];
+  ["CNY","USD","JPY"].forEach(c => {
+    const missing = need[c] && !(n("r"+c)>0);
+    $("r"+c).classList.toggle("missing", !!missing);
+    if(missing) msgs.push("⚠ Enter a " + c + " rate. " + need[c].join(" and ") + " " + (need[c].length>1 ? "are" : "is") + " counted as Rp 0.");
+  });
+  $("warn").innerHTML = msgs.map(m => "<div>"+m+"</div>").join("");
   const bm = cif * n("bm")/100;
   const nilaiImpor = cif + bm;
   const ppn = nilaiImpor * n("ppn")/100;
   const pph = nilaiImpor * n("pph")/100;
-  const local = qty>0 ? (n("thc")+n("truck")+n("ppjk")+n("other"))/qty : 0;
+  const local = qty>0 ? (n("thc")*rate("USD")+n("truck")+n("ppjk")+n("other"))/qty : 0;
   const landed = cif + bm + local;
   const cash = landed + ppn + pph;
 
